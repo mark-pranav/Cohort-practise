@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "blowwwjob22";
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const {z} = require("zod");
 
 
 mongoose.connect("mongodb+srv://admin:Pranav$25@cluster0.uwlhvre.mongodb.net/to-do-app-database");
@@ -12,6 +13,33 @@ mongoose.connect("mongodb+srv://admin:Pranav$25@cluster0.uwlhvre.mongodb.net/to-
 app.use(express.json());
 
 app.post('/signup' , async function(req, res){
+
+    const requireBody = z.object({
+        email : z.string().min(5).max(50).email(),
+        name : z.string().min(3).max(50),
+        password : z.string().min(6).max(20).refine(
+            (password) => /[A-Z]/.test(password),
+            {
+                message: "Password must contain atleast on UpperCase character"
+            }
+        ).refine(
+            (password) => /[a-z]/.test(password),
+            {
+                message: "Password must contain atleast one Lowercase character"
+            }
+        )
+    });
+
+    const parseDatawithSuccess = requireBody.safeParse(req.body); 
+
+    if(!parseDatawithSuccess.success){
+        res.json({
+            message: "failed ",
+            error : parseDatawithSuccess.error
+            
+        })
+        return
+    }
 
     const errorflag = false;
         const email = req.body.email;
@@ -34,7 +62,7 @@ app.post('/signup' , async function(req, res){
         })
         errorflag=true;
     }
-    
+
     if(!errorflag){
 
         res.json({
